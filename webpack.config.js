@@ -4,8 +4,8 @@ module.exports = {
   entry: './lib/t3.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 't3.bundle.js',
-    library: 'T3',
+    filename: 'smbjs.bundle.js',
+    library: 'SMBJS',
     libraryTarget: 'umd'
   },
   watch: true,

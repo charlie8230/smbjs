@@ -1,8 +1,7 @@
-[![NPM version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-[![Project Status](http://opensource.box.com/badges/stable.svg)](http://opensource.box.com/badges)
 
-# T3 JavaScript Framework
+
+# SMBJS
+## a derivative of the T3 JavaScript Framework
 
 T3 is a client-side JavaScript framework for building large-scale web applications. Its design is based on the principles of [Scalable JavaScript Application Architecture](https://www.youtube.com/watch?v=mKouqShWI4o), specifically:
 
