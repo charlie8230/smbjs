@@ -1,6 +1,7 @@
 _site
 node_modules
 backup_dist
+sample
 doc
 *.swp
 *.iml
