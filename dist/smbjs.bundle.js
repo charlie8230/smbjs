@@ -249,6 +249,7 @@ var app = function () {
 	initialized = false,
 	    // Flag whether the application has been initialized
 	customErrorHandler = null,
+	    msg = (0, _mitt2.default)(),
 	    application = new _eventTarget2.default(); // base object for application
 
 	/**
@@ -498,7 +499,20 @@ var app = function () {
 			} else if (behaviorData) {
 
 				if (!moduleBehaviorInstances[behaviorName]) {
-					moduleBehaviorInstances[behaviorName] = behaviorData.creator(instanceData.context);
+					var instance = behaviorData.creator(instanceData.context);
+					moduleBehaviorInstances[behaviorName] = instance;
+
+					console.log(instance.messages);
+					// /* Messages should retain context without this lookup	*/
+
+					// // If onmessage is an object call message handler with the matching key (if any)
+					// if (instance.onmessage !== null && typeof instance.onmessage === 'object' && instance.onmessage.hasOwnProperty(name)) {
+					// 	instance.onmessage[name].call(instance, data);
+
+					// // Otherwise if message name exists in messages call onmessage with name, data
+					// } else if (indexOf(instance.messages || [], name) !== -1) {
+					// 	instance.onmessage.call(instance, name, data);
+					// }
 					//	Add pub sub here
 				}
 
@@ -607,7 +621,7 @@ var app = function () {
 		//----------------------------------------------------------------------
 		// Application Lifecycle
 		//----------------------------------------------------------------------
-
+		msg: msg,
 		/**
    * Initializes the application
    * @param {Object} [params] Configuration object
@@ -681,7 +695,13 @@ var app = function () {
 
 				jsmodule = moduleData.creator(context);
 				//	do pub/sub here
+				if (jsmodule.messages && jsmodule.onmessage) {
+					jsmodule.messages.forEach(function (e) {
+						msg.on(e, jsmodule.onmessage.bind(context), 1);
+					});
+				}
 
+				console.log(jsmodule.messages);
 
 				// Prevent errors from showing the browser, fire event instead
 				if (!globalConfig.debug) {
@@ -943,7 +963,7 @@ var app = function () {
 
 					// Module message handler is called first
 					callMessageHandler(instanceData.instance, name, data);
-
+					msg.emit(name, data);
 					// And then any message handlers defined in module's behaviors
 					moduleBehaviors = getBehaviors(instanceData);
 					for (i = 0; i < moduleBehaviors.length; i++) {
