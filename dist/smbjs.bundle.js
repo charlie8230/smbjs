@@ -499,21 +499,22 @@ var app = function () {
 			} else if (behaviorData) {
 
 				if (!moduleBehaviorInstances[behaviorName]) {
-					var instance = behaviorData.creator(instanceData.context);
-					moduleBehaviorInstances[behaviorName] = instance;
+					(function () {
+						var instance = behaviorData.creator(instanceData.context);
+						moduleBehaviorInstances[behaviorName] = instance;
 
-					console.log(instance.messages);
-					// /* Messages should retain context without this lookup	*/
-
-					// // If onmessage is an object call message handler with the matching key (if any)
-					// if (instance.onmessage !== null && typeof instance.onmessage === 'object' && instance.onmessage.hasOwnProperty(name)) {
-					// 	instance.onmessage[name].call(instance, data);
-
-					// // Otherwise if message name exists in messages call onmessage with name, data
-					// } else if (indexOf(instance.messages || [], name) !== -1) {
-					// 	instance.onmessage.call(instance, name, data);
-					// }
-					//	Add pub sub here
+						if (instance.messages && instance.onmessage) {
+							instance.messages.forEach(function (e) {
+								var handler = void 0;
+								if (_typeof(instance.onmessage) === 'object') {
+									handler = instance.onmessage[e];
+								} else {
+									handler = instance.onmessage;
+								}
+								msg.on(e, handler.bind(instance), 2);
+							});
+						}
+					})();
 				}
 
 				behaviorInstances.push(moduleBehaviorInstances[behaviorName]);
@@ -601,14 +602,14 @@ var app = function () {
 
 		/* Messages should retain context without this lookup	*/
 
-		// If onmessage is an object call message handler with the matching key (if any)
-		if (instance.onmessage !== null && _typeof(instance.onmessage) === 'object' && instance.onmessage.hasOwnProperty(name)) {
-			instance.onmessage[name].call(instance, data);
-
-			// Otherwise if message name exists in messages call onmessage with name, data
-		} else if (indexOf(instance.messages || [], name) !== -1) {
-			instance.onmessage.call(instance, name, data);
-		}
+		// // If onmessage is an object call message handler with the matching key (if any)
+		// if (instance.onmessage !== null && typeof instance.onmessage === 'object' && instance.onmessage.hasOwnProperty(name)) {
+		// 	instance.onmessage[name].call(instance, data);
+		// // Otherwise if message name exists in messages call onmessage with name, data
+		// } else if (indexOf(instance.messages || [], name) !== -1) {
+		// 	instance.onmessage.call(instance, name, data);
+		// }
+		console.log('skipping T3 msg');
 	}
 
 	//--------------------------------------------------------------------------
@@ -696,12 +697,19 @@ var app = function () {
 				jsmodule = moduleData.creator(context);
 				//	do pub/sub here
 				if (jsmodule.messages && jsmodule.onmessage) {
+
 					jsmodule.messages.forEach(function (e) {
-						msg.on(e, jsmodule.onmessage.bind(context), 1);
+						var handler = void 0;
+						if (_typeof(jsmodule.onmessage) === 'object') {
+							handler = jsmodule.onmessage[e];
+						} else {
+							handler = jsmodule.onmessage;
+						}
+						msg.on(e, handler.bind(jsmodule), 1);
 					});
 				}
 
-				console.log(jsmodule.messages);
+				// console.log(jsmodule.messages);
 
 				// Prevent errors from showing the browser, fire event instead
 				if (!globalConfig.debug) {
@@ -760,6 +768,7 @@ var app = function () {
 				var behaviorInstance;
 				for (var i = moduleBehaviors.length - 1; i >= 0; i--) {
 					behaviorInstance = moduleBehaviors[i];
+					//	msg.off()
 					callModuleMethod(behaviorInstance, 'destroy');
 				}
 
@@ -956,6 +965,8 @@ var app = function () {
    
    		REPLACE				*/
 
+			msg.emit(name, data);
+
 			for (id in instances) {
 
 				if (instances.hasOwnProperty(id)) {
@@ -963,7 +974,7 @@ var app = function () {
 
 					// Module message handler is called first
 					callMessageHandler(instanceData.instance, name, data);
-					msg.emit(name, data);
+
 					// And then any message handlers defined in module's behaviors
 					moduleBehaviors = getBehaviors(instanceData);
 					for (i = 0; i < moduleBehaviors.length; i++) {
@@ -1614,11 +1625,11 @@ function mitt(all) {
 				(all[type] || []).slice().sort(function (a, b) {
 					return a.priority - b.priority;
 				}).forEach(function (item) {
-					item.handler(evt, type || '');
+					item.handler(type || '', evt);
 				});
 			}
 			(all['*'] || []).slice().forEach(function (item) {
-				item.handler(evt, type || '');
+				item.handler(type || '', evt);
 			});
 		}
 	};
